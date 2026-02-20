@@ -81,6 +81,7 @@ let printMaze maze =
     let horizontalWall = "+---"
     let verticalWall = "|   "
     let corner = "+   "
+    let empty = "    "
     for y in 0 .. maze.height - 1 do
         // Print upper walls
         for x in 0 .. maze.width - 1 do
@@ -88,7 +89,7 @@ let printMaze maze =
             if Set.contains Up cell.Walls then
                 printf "%s" horizontalWall
             else
-                printf "%s" corner //not working correctly
+                printf "%s" corner
         printfn "+"
         // Print vertical walls
         for x in 0 .. maze.width - 1 do
@@ -96,22 +97,22 @@ let printMaze maze =
             if Set.contains Left cell.Walls then
                 printf "%s" verticalWall
             else
-                printf "    "
+                printf "%s" empty
         printfn "|"
         // Print bottom border
     for x in 0 .. maze.width - 1 do
         let cell = maze.cells |> List.find (fun c -> c.X = x && c.Y = maze.height - 1)
         if Set.contains Down cell.Walls then
-            printf "+---"
+            printf "%s" horizontalWall
         else
-            printf "+   "
+            printf "%s" corner
     printfn "+"
 
 // Main
 [<EntryPoint>]
 let main argv =
 
-    let maze = createMaze 30 30
+    let maze = createMaze 10 10
 
     let maze = randomConnect maze
 
