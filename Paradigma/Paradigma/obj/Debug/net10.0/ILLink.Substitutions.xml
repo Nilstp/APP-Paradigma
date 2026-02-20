@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<linker>
+  <assembly fullname="Paradigma">
+    <resource name="FSharpSignatureData.Paradigma" action="remove"></resource>
+    <resource name="FSharpSignatureCompressedData.Paradigma" action="remove"></resource>
+    <resource name="FSharpSignatureDataB.Paradigma" action="remove"></resource>
+    <resource name="FSharpSignatureCompressedDataB.Paradigma" action="remove"></resource>
+    <resource name="FSharpOptimizationData.Paradigma" action="remove"></resource>
+    <resource name="FSharpOptimizationCompressedData.Paradigma" action="remove"></resource>
+    <resource name="FSharpOptimizationDataB.Paradigma" action="remove"></resource>
+    <resource name="FSharpOptimizationCompressedDataB.Paradigma" action="remove"></resource>
+    <resource name="FSharpOptimizationInfo.Paradigma" action="remove"></resource>
+    <resource name="FSharpSignatureInfo.Paradigma" action="remove"></resource>
+  </assembly>
+</linker>
