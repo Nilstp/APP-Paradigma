@@ -1,12 +1,13 @@
 ﻿open System
 
+// Types
 type Direction = Up | Down | Left | Right
 
 type Cell = { X: int; Y: int; Walls: Set<Direction> }
 
 type Maze = { width: int; height: int; cells: Cell list }
 
-
+// Setup
 let allWalls = [Up; Down; Left; Right]
 
 let oppositeDirection dir =
@@ -16,7 +17,7 @@ let oppositeDirection dir =
     | Left -> Right
     | Right -> Left
 
-
+// Create maze with all walls intact
 let createMaze width height =
     let cells =
         [ for x in 0 .. width - 1 do
@@ -24,7 +25,7 @@ let createMaze width height =
                 { X = x; Y = y; Walls = Set.ofList allWalls } ]
     { width = width; height = height; cells = cells } 
 
-
+// Get neighbors of a cell
 let getNeighbors maze cell =
     let directions = [Up; Down; Left; Right]
     directions
@@ -43,7 +44,7 @@ let getNeighbors maze cell =
             None)
     |> List.choose id
     
-
+// Remove wall
 let removeWall maze cell direction =
     let neighbor = getNeighbors maze cell |> List.tryFind (fun (_, _, dir) -> dir = direction)
     match neighbor with
@@ -61,7 +62,7 @@ let removeWall maze cell direction =
         { maze with cells = updatedCells }
     | None -> maze
 
-
+// Random generator
 let random = Random()
 
 let randomConnect maze =
