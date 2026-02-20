@@ -76,14 +76,13 @@ let randomConnect maze =
             accMaze
     ) maze
 
-
-// ASCII Visualisatie
+// ASCII Visualisation
 let printMaze maze =
     let horizontalWall = "+---"
     let verticalWall = "|   "
     let emptySpace = "    "
     for y in 0 .. maze.height - 1 do
-        // Print bovenste muur
+        // Print upper walls
         for x in 0 .. maze.width - 1 do
             let cell = maze.cells |> List.find (fun c -> c.X = x && c.Y = y)
             if Set.contains Up cell.Walls then
@@ -91,7 +90,7 @@ let printMaze maze =
             else
                 printf "%s" emptySpace
         printfn "+"
-        // Print verticale muren en lege ruimte
+        // Print vertical walls
         for x in 0 .. maze.width - 1 do
             let cell = maze.cells |> List.find (fun c -> c.X = x && c.Y = y)
             if Set.contains Left cell.Walls then
@@ -99,7 +98,6 @@ let printMaze maze =
             else
                 printf "    "
         printfn "|"
-
 
 // Main
 [<EntryPoint>]
