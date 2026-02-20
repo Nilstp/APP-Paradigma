@@ -1,10 +1,14 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Users\\nilst\\source\\repos\\Paradigma\\",
+  "WorkspaceRootPath": "C:\\Users\\nilst\\OneDrive\\Documenten\\GitHub\\APP-Paradigma\\Paradigma\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{2A921F8B-918C-4BB7-A2A7-5379BB4C8E74}|Paradigma\\Paradigma.fsproj|c:\\users\\nilst\\source\\repos\\paradigma\\paradigma\\program.fs||{8A5AA6CF-46E3-4520-A70A-7393D15233E9}",
-      "RelativeMoniker": "D:0:0:{2A921F8B-918C-4BB7-A2A7-5379BB4C8E74}|Paradigma\\Paradigma.fsproj|solutionrelative:paradigma\\program.fs||{8A5AA6CF-46E3-4520-A70A-7393D15233E9}"
+      "AbsoluteMoniker": "D:0:0:{EECEFEBA-88E2-52DF-D516-A2F72250275A}|Paradigma\\Paradigma.fsproj|c:\\users\\nilst\\onedrive\\documenten\\github\\app-paradigma\\paradigma\\paradigma\\.gitignore||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{EECEFEBA-88E2-52DF-D516-A2F72250275A}|Paradigma\\Paradigma.fsproj|solutionrelative:paradigma\\.gitignore||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{EECEFEBA-88E2-52DF-D516-A2F72250275A}|Paradigma\\Paradigma.fsproj|c:\\users\\nilst\\onedrive\\documenten\\github\\app-paradigma\\paradigma\\paradigma\\program.fs||{8A5AA6CF-46E3-4520-A70A-7393D15233E9}",
+      "RelativeMoniker": "D:0:0:{EECEFEBA-88E2-52DF-D516-A2F72250275A}|Paradigma\\Paradigma.fsproj|solutionrelative:paradigma\\program.fs||{8A5AA6CF-46E3-4520-A70A-7393D15233E9}"
     }
   ],
   "DocumentGroupContainers": [
@@ -19,12 +23,25 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
+              "Title": ".gitignore",
+              "DocumentMoniker": "C:\\Users\\nilst\\OneDrive\\Documenten\\GitHub\\APP-Paradigma\\Paradigma\\Paradigma\\.gitignore",
+              "RelativeDocumentMoniker": "Paradigma\\.gitignore",
+              "ToolTip": "C:\\Users\\nilst\\OneDrive\\Documenten\\GitHub\\APP-Paradigma\\Paradigma\\Paradigma\\.gitignore*",
+              "RelativeToolTip": "Paradigma\\.gitignore*",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAGAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-02-20T13:39:11.823Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
               "Title": "Program.fs",
-              "DocumentMoniker": "C:\\Users\\nilst\\source\\repos\\Paradigma\\Paradigma\\Program.fs",
+              "DocumentMoniker": "C:\\Users\\nilst\\OneDrive\\Documenten\\GitHub\\APP-Paradigma\\Paradigma\\Paradigma\\Program.fs",
               "RelativeDocumentMoniker": "Paradigma\\Program.fs",
-              "ToolTip": "C:\\Users\\nilst\\source\\repos\\Paradigma\\Paradigma\\Program.fs",
+              "ToolTip": "C:\\Users\\nilst\\OneDrive\\Documenten\\GitHub\\APP-Paradigma\\Paradigma\\Paradigma\\Program.fs",
               "RelativeToolTip": "Paradigma\\Program.fs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAcwAIAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
               "WhenOpened": "2026-02-20T13:28:42.038Z",
               "EditorCaption": ""
