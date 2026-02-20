@@ -98,6 +98,14 @@ let printMaze maze =
             else
                 printf "    "
         printfn "|"
+        // Print bottom border
+    for x in 0 .. maze.width - 1 do
+        let cell = maze.cells |> List.find (fun c -> c.X = x && c.Y = maze.height - 1)
+        if Set.contains Down cell.Walls then
+            printf "+---"
+        else
+            printf "+   "
+    printfn "+"
 
 // Main
 [<EntryPoint>]
