@@ -5,6 +5,8 @@ type Direction = Up | Down | Left | Right
 
 type Cell = { X: int; Y: int; Walls: Set<Direction> }
 
+type Wall = Cell * Direction
+
 type Maze = { width: int; height: int; cells: Cell list }
 
 // Setup
@@ -25,6 +27,10 @@ let createMaze width height =
                 { X = x; Y = y; Walls = Set.ofList allWalls } ]
     { width = width; height = height; cells = cells } 
 
+// Get cell from maze
+let getCell maze x y =
+    maze.cells |> List.find (fun c -> c.X = x && c.Y = y)
+
 // Get neighbors of a cell
 let getNeighbors maze cell =
     let directions = [Up; Down; Left; Right]
@@ -39,58 +45,56 @@ let getNeighbors maze cell =
         let neighborX = cell.X + dx
         let neighborY = cell.Y + dy
         if neighborX >= 0 && neighborX < maze.width && neighborY >= 0 && neighborY < maze.height then
-            Some (neighborX, neighborY, dir)
+            Some (getCell maze neighborX neighborY, dir)
         else
             None)
     |> List.choose id
     
-// Remove wall
+// Remove wall between two cells
 let removeWall maze cell direction =
-    let neighbor = getNeighbors maze cell |> List.tryFind (fun (_, _, dir) -> dir = direction)
-    match neighbor with
-    | Some (nx, ny, dir) ->
+    let neighbors = getNeighbors maze cell
+    match neighbors |> List.tryFind (fun (_, dir) -> dir = direction) with
+    | Some (neighbor, dir) ->
         let oppositeDir = oppositeDirection dir
         let updatedCells =
             maze.cells
             |> List.map (fun c ->
                 if c.X = cell.X && c.Y = cell.Y then
                     { c with Walls = Set.remove dir c.Walls }
-                elif c.X = nx && c.Y = ny then
+                elif c.X = neighbor.X && c.Y = neighbor.Y then
                     { c with Walls = Set.remove oppositeDir c.Walls }
                 else
                     c)
         { maze with cells = updatedCells }
     | None -> maze
 
-// Random generator
-let random = Random()
-
-let randomConnect maze =
-    maze.cells
-    |> List.fold (fun accMaze cell ->
-        let neighbors = getNeighbors accMaze cell
-        if neighbors.Length > 0 then
-            let (_, _, dir) = neighbors.[random.Next(neighbors.Length)]
-            removeWall accMaze cell dir
-        else
-            accMaze
-    ) maze
-
 // Prim's algorithm
 let primsAlgorithm maze =
     let startCell = maze.cells.[0]
+
     let mutable visited = Set.empty
-    let mutable walls = []
+    let mutable frontier : (Cell * Direction) list = []
     let mutable resultMaze = maze
+
     visited <- Set.add (startCell.X, startCell.Y) visited
-    walls <- getNeighbors maze startCell
-    while walls.Length > 0 do
-        let (nx, ny, dir) = walls.[random.Next(walls.Length)]
-        if not (Set.contains (nx, ny) visited) then
-            resultMaze <- removeWall resultMaze { X = nx; Y = ny; Walls = Set.empty } dir
-            visited <- Set.add (nx, ny) visited
-            walls <- walls @ getNeighbors maze { X = nx; Y = ny; Walls = Set.empty }
-        walls <- List.filter (fun (x, y, _) -> not (Set.contains (x, y) visited)) walls
+
+    frontier <- getNeighbors resultMaze startCell
+            |> List.map (fun (_,dir) -> (startCell, dir))
+
+    while frontier.Length > 0 do
+        let index = Random().Next(frontier.Length)
+        let (cell, dir) = frontier.[index]
+        frontier <- frontier |> List.mapi (fun i x -> (i,x)) |> List.filter (fun (i, _) -> i <> index) |> List.map snd
+
+        let neighbors = getNeighbors resultMaze cell
+        match neighbors |> List.tryFind (fun (_, d) -> d = dir) with
+        | Some (neighbor, _) ->
+            if not (Set.contains (neighbor.X, neighbor.Y) visited) then
+                resultMaze <- removeWall resultMaze cell dir
+                visited <- Set.add (neighbor.X, neighbor.Y) visited
+                let newWalls = getNeighbors resultMaze neighbor |> List.filter (fun (n, _) -> not (Set.contains (n.X, n.Y) visited)) |> List.map (fun (_,d) -> (neighbor, d))
+                frontier <- frontier @ newWalls
+        | None -> ()
     resultMaze
 
 
