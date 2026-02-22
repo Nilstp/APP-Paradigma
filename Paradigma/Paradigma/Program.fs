@@ -76,6 +76,24 @@ let randomConnect maze =
             accMaze
     ) maze
 
+// Prim's algorithm
+let primsAlgorithm maze =
+    let startCell = maze.cells.[0]
+    let mutable visited = Set.empty
+    let mutable walls = []
+    let mutable resultMaze = maze
+    visited <- Set.add (startCell.X, startCell.Y) visited
+    walls <- getNeighbors maze startCell
+    while walls.Length > 0 do
+        let (nx, ny, dir) = walls.[random.Next(walls.Length)]
+        if not (Set.contains (nx, ny) visited) then
+            resultMaze <- removeWall resultMaze { X = nx; Y = ny; Walls = Set.empty } dir
+            visited <- Set.add (nx, ny) visited
+            walls <- walls @ getNeighbors maze { X = nx; Y = ny; Walls = Set.empty }
+        walls <- List.filter (fun (x, y, _) -> not (Set.contains (x, y) visited)) walls
+    resultMaze
+
+
 // ASCII Visualisation
 let printMaze maze =
     let horizontalWall = "+---"
@@ -114,7 +132,9 @@ let main argv =
 
     let maze = createMaze 10 10
 
-    let maze = randomConnect maze
+    //let maze = randomConnect maze
+
+    let maze = primsAlgorithm maze
 
     Console.SetWindowSize(800, 400);
 
