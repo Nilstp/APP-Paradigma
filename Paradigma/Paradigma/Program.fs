@@ -112,34 +112,45 @@ let primsAlgorithm maze =
 // ASCII Visualisation
 let printMaze maze =
     let horizontalWall = "+---"
+    let noHorizontalWall = "+   "
     let verticalWall = "|   "
-    let corner = "+   "
-    let empty = "    "
+    let noVerticalWall = "    "
+
     for y in 0 .. maze.height - 1 do
-        // Print upper walls
+
+        // Print horizontal walls and spaces
         for x in 0 .. maze.width - 1 do
-            let cell = maze.cells |> List.find (fun c -> c.X = x && c.Y = y)
+            let cell = getCell maze x y
             if Set.contains Up cell.Walls then
                 printf "%s" horizontalWall
             else
-                printf "%s" corner
+                printf "%s" noHorizontalWall
         printfn "+"
-        // Print vertical walls
+
+        // Print vertical walls and spaces
         for x in 0 .. maze.width - 1 do
-            let cell = maze.cells |> List.find (fun c -> c.X = x && c.Y = y)
+            let cell = getCell maze x y
             if Set.contains Left cell.Walls then
                 printf "%s" verticalWall
             else
-                printf "%s" empty
-        printfn "|"
-        // Print bottom border
+                printf "%s" noVerticalWall
+
+        // Print right wall of last cell
+        let lastCell = getCell maze (maze.width - 1) y
+        if Set.contains Right lastCell.Walls then
+            printfn "|"
+        else
+            printfn " "
+
+    // Print bottom walls of the last row
     for x in 0 .. maze.width - 1 do
-        let cell = maze.cells |> List.find (fun c -> c.X = x && c.Y = maze.height - 1)
+        let cell = getCell maze x (maze.height - 1)
         if Set.contains Down cell.Walls then
             printf "%s" horizontalWall
         else
-            printf "%s" corner
+            printf "%s" noHorizontalWall
     printfn "+"
+
 
 // Main
 [<EntryPoint>]
@@ -151,7 +162,7 @@ let main argv =
 
     let maze = removeOuterWall maze 0 0 Left
 
-    let maze = removeOuterWall maze (maze.width - 1) (maze.height - 1) Left
+    let maze = removeOuterWall maze (maze.width - 1) (maze.height - 1) Right
 
     Console.SetWindowSize(800, 400);
 
