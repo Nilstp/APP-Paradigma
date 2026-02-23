@@ -30,7 +30,7 @@ let createMaze width height =
 
 // Get cell from maze
 let getCell maze x y =
-    maze.cells |> List.find (fun c -> c.X = x && c.Y = y)
+    maze.cells[x, y]
 
 // Get neighbors of a cell
 let getNeighbors maze cell =
@@ -53,62 +53,81 @@ let getNeighbors maze cell =
     
 // Remove wall between two cells
 let removeWall maze cell direction =
-    let neighbors = getNeighbors maze cell
-    match neighbors |> List.tryFind (fun (_, dir) -> dir = direction) with
-    | Some (neighbor, dir) ->
-        let oppositeDir = oppositeDirection dir
-        let updatedCells =
-            maze.cells
-            |> List.map (fun c ->
-                if c.X = cell.X && c.Y = cell.Y then
-                    { c with Walls = Set.remove dir c.Walls }
-                elif c.X = neighbor.X && c.Y = neighbor.Y then
-                    { c with Walls = Set.remove oppositeDir c.Walls }
-                else
-                    c)
-        { maze with cells = updatedCells }
-    | None -> maze
+    let (dx, dy) =
+        match direction with
+        | Up -> (0, -1)
+        | Down -> (0, 1)
+        | Left -> (-1, 0)
+        | Right -> (1, 0)
+
+    let nx = cell.X + dx
+    let ny = cell.Y + dy
+
+    if nx >= 0 && nx < maze.width && ny >= 0 && ny < maze.height then
+        let oppositeDir = oppositeDirection direction
+
+        let current = maze.cells[cell.X, cell.Y]
+        maze.cells[cell.X, cell.Y] <-
+            { current with Walls = Set.remove direction current.Walls }
+
+        let neighbor = maze.cells[nx, ny]
+        maze.cells[nx, ny] <-
+            { neighbor with Walls = Set.remove oppositeDir neighbor.Walls }
+
+    maze
 
 // Remove outer wall of a cell (used for entrance and exit)
 let removeOuterWall maze x y direction =
-    let updatedCells =
-        maze.cells
-        |> List.map (fun c ->
-            if c.X = x && c.Y = y then
-                { c with Walls = Set.remove direction c.Walls }
-            else
-                c)
-    { maze with cells = updatedCells }
+    let cell = maze.cells[x, y]
+    maze.cells[x, y] <-
+        { cell with Walls = Set.remove direction cell.Walls }
+    maze
+
+// Random generator (single instance!)
+let random = Random()
 
 // Prim's algorithm
 let primsAlgorithm maze =
-    let startCell = maze.cells.[0]
+    let startCell = maze.cells[0, 0]
 
     let mutable visited = Set.empty
     let mutable frontier : (Cell * Direction) list = []
-    let mutable resultMaze = maze
 
     visited <- Set.add (startCell.X, startCell.Y) visited
 
-    frontier <- getNeighbors resultMaze startCell
-            |> List.map (fun (_,dir) -> (startCell, dir))
+    frontier <-
+        getNeighbors maze startCell
+        |> List.map (fun (_, dir) -> (startCell, dir))
 
     while frontier.Length > 0 do
-        let index = Random().Next(frontier.Length)
-        let (cell, dir) = frontier.[index]
-        frontier <- frontier |> List.mapi (fun i x -> (i,x)) |> List.filter (fun (i, _) -> i <> index) |> List.map snd
+        let index = random.Next(frontier.Length)
+        let (cell, dir) = frontier[index]
 
-        let neighbors = getNeighbors resultMaze cell
-        match neighbors |> List.tryFind (fun (_, d) -> d = dir) with
+        // remove selected wall from frontier
+        frontier <-
+            frontier
+            |> List.mapi (fun i x -> (i, x))
+            |> List.filter (fun (i, _) -> i <> index)
+            |> List.map snd
+
+        match getNeighbors maze cell |> List.tryFind (fun (_, d) -> d = dir) with
         | Some (neighbor, _) ->
             if not (Set.contains (neighbor.X, neighbor.Y) visited) then
-                resultMaze <- removeWall resultMaze cell dir
+
+                removeWall maze cell dir |> ignore
+
                 visited <- Set.add (neighbor.X, neighbor.Y) visited
-                let newWalls = getNeighbors resultMaze neighbor |> List.filter (fun (n, _) -> not (Set.contains (n.X, n.Y) visited)) |> List.map (fun (_,d) -> (neighbor, d))
+
+                let newWalls =
+                    getNeighbors maze neighbor
+                    |> List.filter (fun (n, _) ->
+                        not (Set.contains (n.X, n.Y) visited))
+                    |> List.map (fun (_, d) -> (neighbor, d))
+
                 frontier <- frontier @ newWalls
         | None -> ()
-    resultMaze
 
+    maze
 
 // ASCII Visualisation
 let printMaze maze =
@@ -119,45 +138,44 @@ let printMaze maze =
 
     for y in 0 .. maze.height - 1 do
 
-        // Print horizontal walls and spaces
+        // Top walls
         for x in 0 .. maze.width - 1 do
-            let cell = getCell maze x y
+            let cell = maze.cells[x, y]
             if Set.contains Up cell.Walls then
                 printf "%s" horizontalWall
             else
                 printf "%s" noHorizontalWall
         printfn "+"
 
-        // Print vertical walls and spaces
+        // Left walls
         for x in 0 .. maze.width - 1 do
-            let cell = getCell maze x y
+            let cell = maze.cells[x, y]
             if Set.contains Left cell.Walls then
                 printf "%s" verticalWall
             else
                 printf "%s" noVerticalWall
 
-        // Print right wall of last cell
-        let lastCell = getCell maze (maze.width - 1) y
+        // Right wall of last cell
+        let lastCell = maze.cells[maze.width - 1, y]
         if Set.contains Right lastCell.Walls then
             printfn "|"
         else
             printfn " "
 
-    // Print bottom walls of the last row
+    // Bottom border
     for x in 0 .. maze.width - 1 do
-        let cell = getCell maze x (maze.height - 1)
+        let cell = maze.cells[x, maze.height - 1]
         if Set.contains Down cell.Walls then
             printf "%s" horizontalWall
         else
             printf "%s" noHorizontalWall
     printfn "+"
 
-
 // Main
 [<EntryPoint>]
 let main argv =
 
-    let maze = createMaze 10 10
+    let maze = createMaze 30 30
 
     let maze = primsAlgorithm maze
 
