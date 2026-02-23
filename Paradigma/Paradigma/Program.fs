@@ -103,7 +103,7 @@ let primsAlgorithm maze =
         let index = random.Next(frontier.Length)
         let (cell, dir) = frontier[index]
 
-        // remove selected wall from frontier
+        // Remove selected wall from frontier
         frontier <-
             frontier
             |> List.mapi (fun i x -> (i, x))
@@ -128,6 +128,55 @@ let primsAlgorithm maze =
         | None -> ()
 
     maze
+
+// Lazy version of Prim's algorithm that yields the maze state after every change so that step by step visualisation is possible
+let primsAlgorithmLazy maze =
+    seq {
+
+        let startCell = maze.cells[0, 0]
+
+        let mutable visited = Set.empty
+        let mutable frontier : (Cell * Direction) list = []
+
+        visited <- Set.add (startCell.X, startCell.Y) visited
+
+        frontier <-
+            getNeighbors maze startCell
+            |> List.map (fun (_, dir) -> (startCell, dir))
+
+        // Yield initial maze state
+        yield maze
+
+        while frontier.Length > 0 do
+            let index = random.Next(frontier.Length)
+            let (cell, dir) = frontier[index]
+
+            frontier <-
+                frontier
+                |> List.mapi (fun i x -> (i, x))
+                |> List.filter (fun (i, _) -> i <> index)
+                |> List.map snd
+
+            match getNeighbors maze cell |> List.tryFind (fun (_, d) -> d = dir) with
+            | Some (neighbor, _) ->
+                if not (Set.contains (neighbor.X, neighbor.Y) visited) then
+
+                    removeWall maze cell dir |> ignore
+
+                    visited <- Set.add (neighbor.X, neighbor.Y) visited
+
+                    let newWalls =
+                        getNeighbors maze neighbor
+                        |> List.filter (fun (n, _) ->
+                            not (Set.contains (n.X, n.Y) visited))
+                        |> List.map (fun (_, d) -> (neighbor, d))
+
+                    frontier <- frontier @ newWalls
+
+                    // yield after every change
+                    yield maze
+            | None -> ()
+    }
 
 // ASCII Visualisation
 let printMaze maze =
@@ -175,16 +224,21 @@ let printMaze maze =
 [<EntryPoint>]
 let main argv =
 
-    let maze = createMaze 30 30
+    let maze = createMaze 10 10
 
-    let maze = primsAlgorithm maze
+    //let maze = primsAlgorithm maze
 
-    let maze = removeOuterWall maze 0 0 Left
+    //let maze = removeOuterWall maze 0 0 Left
 
-    let maze = removeOuterWall maze (maze.width - 1) (maze.height - 1) Right
+    //let maze = removeOuterWall maze (maze.width - 1) (maze.height - 1) Right
 
-    Console.SetWindowSize(800, 400);
+    //Console.SetWindowSize(800, 400);
 
-    printMaze maze
+    //printMaze maze
+
+    for step in primsAlgorithmLazy maze do
+        Console.Clear()
+        printMaze step
+        System.Threading.Thread.Sleep(1000)
 
     0
