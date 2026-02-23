@@ -68,6 +68,17 @@ let removeWall maze cell direction =
         { maze with cells = updatedCells }
     | None -> maze
 
+// Remove outer wall of a cell (used for entrance and exit)
+let removeOuterWall maze x y direction =
+    let updatedCells =
+        maze.cells
+        |> List.map (fun c ->
+            if c.X = x && c.Y = y then
+                { c with Walls = Set.remove direction c.Walls }
+            else
+                c)
+    { maze with cells = updatedCells }
+
 // Prim's algorithm
 let primsAlgorithm maze =
     let startCell = maze.cells.[0]
@@ -136,9 +147,11 @@ let main argv =
 
     let maze = createMaze 10 10
 
-    //let maze = randomConnect maze
-
     let maze = primsAlgorithm maze
+
+    let maze = removeOuterWall maze 0 0 Left
+
+    let maze = removeOuterWall maze (maze.width - 1) (maze.height - 1) Left
 
     Console.SetWindowSize(800, 400);
 
