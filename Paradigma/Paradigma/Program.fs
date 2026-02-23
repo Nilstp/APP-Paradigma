@@ -7,7 +7,7 @@ type Cell = { X: int; Y: int; Walls: Set<Direction> }
 
 type Wall = Cell * Direction
 
-type Maze = { width: int; height: int; cells: Cell list }
+type Maze = { width: int; height: int; cells: Cell[,] }
 
 // Setup
 let allWalls = [Up; Down; Left; Right]
@@ -22,10 +22,11 @@ let oppositeDirection dir =
 // Create maze with all walls intact
 let createMaze width height =
     let cells =
-        [ for x in 0 .. width - 1 do
-            for y in 0 .. height - 1 do
-                { X = x; Y = y; Walls = Set.ofList allWalls } ]
-    { width = width; height = height; cells = cells } 
+        Array2D.init width height (fun x y ->
+            { X = x
+              Y = y
+              Walls = Set.ofList allWalls })
+    { width = width; height = height; cells = cells }
 
 // Get cell from maze
 let getCell maze x y =
