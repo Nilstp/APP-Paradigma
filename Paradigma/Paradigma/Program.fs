@@ -183,6 +183,8 @@ let ellersAlgorithm maze =
     let width = maze.width
     let height = maze.height
 
+    let random = Random()
+
     // Each row has a set ID per column
     let mutable nextSetId = 1
     let mutable sets = Array.zeroCreate width
@@ -194,6 +196,33 @@ let ellersAlgorithm maze =
             if sets[x] = 0 then
                 sets[x] <- nextSetId
                 nextSetId <- nextSetId + 1
+
+        // Create vertical connections (except last row)
+        if y <> height - 1 then
+
+            let newSets = Array.zeroCreate width
+
+            // Group columns by set
+            let grouped =
+                sets
+                |> Array.mapi (fun i s -> (i, s))
+                |> Array.groupBy snd
+
+            for (_, members) in grouped do
+
+                // At least one cell per set must connect downward
+                let connectCount =
+                    1 + random.Next(members.Length)
+
+                let shuffled =
+                    members |> Array.sortBy (fun _ -> random.Next())
+
+                for i in 0 .. connectCount - 1 do
+                    let (x, setId) = shuffled[i]
+                    removeWall maze maze.cells[x, y] Down |> ignore
+                    newSets[x] <- setId
+
+            sets <- newSets
 
     maze
 
