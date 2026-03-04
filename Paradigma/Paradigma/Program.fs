@@ -189,6 +189,14 @@ let ellersAlgorithm maze =
     let mutable nextSetId = 1
     let mutable sets = Array.zeroCreate width
 
+    // Helper to merge two sets
+    let mergeSets a b =
+        let oldSet = sets[b]
+        let newSet = sets[a]
+        for i in 0 .. width - 1 do
+            if sets[i] = oldSet then
+                sets[i] <- newSet
+
     for y in 0 .. height - 1 do
 
         // Assign sets if not assigned
@@ -196,6 +204,20 @@ let ellersAlgorithm maze =
             if sets[x] = 0 then
                 sets[x] <- nextSetId
                 nextSetId <- nextSetId + 1
+
+        // Join adjacent cells randomly (except last row)
+        if y <> height - 1 then
+            for x in 0 .. width - 2 do
+                if sets[x] <> sets[x + 1] && random.Next(2) = 0 then
+                    removeWall maze maze.cells[x, y] Right |> ignore
+                    mergeSets x (x + 1)
+
+        else
+            // Force merge all different sets on last row
+            for x in 0 .. width - 2 do
+                if sets[x] <> sets[x + 1] then
+                    removeWall maze maze.cells[x, y] Right |> ignore
+                    mergeSets x (x + 1)
 
         // Create vertical connections (except last row)
         if y <> height - 1 then
