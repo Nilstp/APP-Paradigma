@@ -178,6 +178,25 @@ let primsAlgorithmLazy maze =
             | None -> ()
     }
 
+// Eller's algorithm
+let ellersAlgorithm maze =
+    let width = maze.width
+    let height = maze.height
+
+    // Each row has a set ID per column
+    let mutable nextSetId = 1
+    let mutable sets = Array.zeroCreate width
+
+    for y in 0 .. height - 1 do
+
+        // Assign sets if not assigned
+        for x in 0 .. width - 1 do
+            if sets[x] = 0 then
+                sets[x] <- nextSetId
+                nextSetId <- nextSetId + 1
+
+    maze
+
 // ASCII Visualisation
 let printMaze maze =
     let horizontalWall = "+---"
@@ -228,17 +247,20 @@ let main argv =
 
     //let maze = primsAlgorithm maze
 
+    //for step in primsAlgorithmLazy maze do
+    //    Console.Clear()
+    //    printMaze step
+    //    System.Threading.Thread.Sleep(1000)
+
+
+    let maze = ellersAlgorithm maze
+
     //let maze = removeOuterWall maze 0 0 Left
 
     //let maze = removeOuterWall maze (maze.width - 1) (maze.height - 1) Right
 
     //Console.SetWindowSize(800, 400);
 
-    //printMaze maze
-
-    for step in primsAlgorithmLazy maze do
-        Console.Clear()
-        printMaze step
-        System.Threading.Thread.Sleep(1000)
+    printMaze maze
 
     0
