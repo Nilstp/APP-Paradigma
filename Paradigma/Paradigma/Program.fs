@@ -260,6 +260,85 @@ let ellersAlgorithm maze =
 
     maze
 
+
+let ellersAlgorithmLazy maze =
+    seq {
+        let width = maze.width
+        let height = maze.height
+
+        let random = Random()
+
+        // Each row has a set ID per column
+        let mutable nextSetId = 1
+        let mutable sets = Array.zeroCreate width
+
+        // Yield initial maze state
+        yield maze
+
+        // Helper to merge two sets
+        let mergeSets a b =
+            let oldSet = sets[b]
+            let newSet = sets[a]
+            for i in 0 .. width - 1 do
+                if sets[i] = oldSet then
+                    sets[i] <- newSet
+
+        for y in 0 .. height - 1 do
+
+            // Assign sets if not assigned
+            for x in 0 .. width - 1 do
+                if sets[x] = 0 then
+                    sets[x] <- nextSetId
+                    nextSetId <- nextSetId + 1
+
+            // Join adjacent cells randomly (except last row)
+            if y <> height - 1 then
+                for x in 0 .. width - 2 do
+                    if sets[x] <> sets[x + 1] && random.Next(2) = 0 then
+                        removeWall maze maze.cells[x, y] Right |> ignore
+                        mergeSets x (x + 1)
+                        yield maze
+
+            else
+                // Force merge all different sets on last row
+                for x in 0 .. width - 2 do
+                    if sets[x] <> sets[x + 1] then
+                        removeWall maze maze.cells[x, y] Right |> ignore
+                        mergeSets x (x + 1)
+                        yield maze
+
+            // Create vertical connections (except last row)
+            if y <> height - 1 then
+
+                let newSets = Array.zeroCreate width
+
+                // Group columns by set
+                let grouped =
+                    sets
+                    |> Array.mapi (fun i s -> (i, s))
+                    |> Array.groupBy snd
+
+                for (_, members) in grouped do
+
+                    // At least one cell per set must connect downward
+                    let connectCount =
+                        1 + random.Next(members.Length)
+
+                    let shuffled =
+                        members |> Array.sortBy (fun _ -> random.Next())
+
+                    for i in 0 .. connectCount - 1 do
+                        let (x, setId) = shuffled[i]
+                        removeWall maze maze.cells[x, y] Down |> ignore
+                        newSets[x] <- setId
+                        yield maze
+
+                sets <- newSets
+
+        yield maze
+    }
+
+
 // ASCII Visualisation
 let printMaze maze =
     let horizontalWall = "+---"
@@ -308,7 +387,7 @@ let main argv =
 
     let maze = createMaze 10 10
 
-    let maze = trueRandom maze
+    //let maze = trueRandom maze
 
     //let maze = primsAlgorithm maze
 
@@ -323,6 +402,11 @@ let main argv =
     let maze = removeOuterWall maze 0 0 Left
 
     let maze = removeOuterWall maze (maze.width - 1) (maze.height - 1) Right
+
+    for step in ellersAlgorithmLazy maze do
+        Console.Clear()
+        printMaze step
+        System.Threading.Thread.Sleep(200)
 
     //Console.SetWindowSize(800, 400);
 
