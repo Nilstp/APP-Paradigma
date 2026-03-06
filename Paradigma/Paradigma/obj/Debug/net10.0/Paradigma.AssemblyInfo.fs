@@ -10,7 +10,7 @@ open System.Reflection
 [<assembly: System.Reflection.AssemblyCompanyAttribute("Paradigma")>]
 [<assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")>]
 [<assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")>]
-[<assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+07496d72fa9522220f83ecca7d32396ba4f5ce3e")>]
+[<assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ee02a39e3166f415a0379f2e14a0de8fbed3dcf8")>]
 [<assembly: System.Reflection.AssemblyProductAttribute("Paradigma")>]
 [<assembly: System.Reflection.AssemblyTitleAttribute("Paradigma")>]
 [<assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")>]

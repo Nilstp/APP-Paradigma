@@ -87,15 +87,15 @@ let removeOuterWall maze x y direction =
 let random = Random()
 
 let trueRandom maze =
-    let cellsSeq = seq { for x in 0 .. maze.width - 1 do for y in 0 .. maze.height - 1 -> maze.cells[x, y] }
-    Seq.fold (fun accMaze cell ->
+    maze.cells
+    |> List.fold (fun accMaze cell ->
         let neighbors = getNeighbors accMaze cell
         if neighbors.Length > 0 then
-            let (_, dir) = neighbors.[random.Next(neighbors.Length)]
+            let (_, _, dir) = neighbors.[random.Next(neighbors.Length)]
             removeWall accMaze cell dir
         else
             accMaze
-    ) maze cellsSeq
+    ) maze
 
 
 // Prim's algorithm
@@ -308,8 +308,6 @@ let main argv =
 
     let maze = createMaze 10 10
 
-    let maze = trueRandom maze
-
     //let maze = primsAlgorithm maze
 
     //for step in primsAlgorithmLazy maze do
@@ -318,11 +316,11 @@ let main argv =
     //    System.Threading.Thread.Sleep(1000)
 
 
-    //let maze = ellersAlgorithm maze
+    let maze = ellersAlgorithm maze
 
-    let maze = removeOuterWall maze 0 0 Left
+    //let maze = removeOuterWall maze 0 0 Left
 
-    let maze = removeOuterWall maze (maze.width - 1) (maze.height - 1) Right
+    //let maze = removeOuterWall maze (maze.width - 1) (maze.height - 1) Right
 
     //Console.SetWindowSize(800, 400);
 
