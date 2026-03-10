@@ -136,22 +136,17 @@ let random = Random()
 
 // True random maze generation by randomly removing walls between cells.
 let trueRandom maze =
-    seq {
-        let cells =
-            seq { for x in 0 .. maze.width - 1 do
-                    for y in 0 .. maze.height - 1 ->
-                        maze.cells[x, y] }
-
-        let mutable acc = maze
-
-        for cell in cells do
-            let neighbors = getNeighbors acc cell
-            if neighbors.Length > 0 then
-                let (_, dir) = neighbors.[random.Next(neighbors.Length)]
-                acc <- removeWall acc cell dir
-
-            yield acc
-    }
+    // Create a sequence of all cells in the maze.
+    let cellsSeq = seq { for x in 0 .. maze.width - 1 do for y in 0 .. maze.height - 1 -> maze.cells[x, y] }
+    // Fold over the sequence of cells, randomly removing walls where possible.
+    Seq.fold (fun accMaze cell ->
+        let neighbors = getNeighbors accMaze cell
+        if neighbors.Length > 0 then
+            let (_, dir) = neighbors.[random.Next(neighbors.Length)]
+            removeWall accMaze cell dir
+        else
+            accMaze
+    ) maze cellsSeq
 
 
 // -----------------------------
@@ -350,26 +345,13 @@ let printMaze maze =
             printf "%s" noHorizontalWall
     printfn "+"
 
-let runLazyAlgorithm (steps: seq<Maze>) stepByStep (delay: int) =
-    let mutable quit = false
-
-    use enumerator = steps.GetEnumerator()
-    while not quit && enumerator.MoveNext() do
+let runLazyAlgorithm (steps: seq<Maze>) stepByStep delay =
+    for step in steps do
         Console.Clear()
-        printMaze enumerator.Current
+        printMaze step
 
         if stepByStep then
-            printfn ""
-            printfn "Press SPACE for next step | Q to quit"
-
-            // Wait until user presses SPACE to advance or Q to quit.
-            let mutable waiting = true
-            while waiting && not quit do
-                let key = Console.ReadKey(true).Key
-                match key with
-                | ConsoleKey.Spacebar -> waiting <- false
-                | ConsoleKey.Q -> quit <- true; waiting <- false
-                | _ -> printfn "Invalid key. Press SPACE for next step or Q to quit."
+            Console.ReadKey(true) |> ignore
         else
             System.Threading.Thread.Sleep(delay)
 
@@ -393,7 +375,7 @@ let rec chooseAlgorithm () =
 let rec chooseMode () =
     printfn ""
     printfn "Choose execution mode:"
-    printfn "1 - Step by step (Each step is activated by pressing a key)"
+    printfn "1 - Step by step"
     printfn "2 - Run automatically"
     printf "> "
 
@@ -422,7 +404,10 @@ let main argv =
 
     match algorithm with
     | 1 ->
-        runLazyAlgorithm (trueRandom maze) stepMode 100
+        // True random (not lazy so we wrap it)
+        let finalMaze = trueRandom maze
+        Console.Clear()
+        printMaze finalMaze
 
     | 2 ->
         runLazyAlgorithm (primsAlgorithmLazy maze) stepMode 100

@@ -362,14 +362,12 @@ let runLazyAlgorithm (steps: seq<Maze>) stepByStep (delay: int) =
             printfn ""
             printfn "Press SPACE for next step | Q to quit"
 
-            // Wait until user presses SPACE to advance or Q to quit.
-            let mutable waiting = true
-            while waiting && not quit do
-                let key = Console.ReadKey(true).Key
-                match key with
-                | ConsoleKey.Spacebar -> waiting <- false
-                | ConsoleKey.Q -> quit <- true; waiting <- false
-                | _ -> printfn "Invalid key. Press SPACE for next step or Q to quit."
+            let key = Console.ReadKey(true).Key
+
+            match key with
+            | ConsoleKey.Spacebar -> ()
+            | ConsoleKey.Q -> quit <- true
+            | ignore -> printfn "Invalid key. Press SPACE for next step or Q to quit."
         else
             System.Threading.Thread.Sleep(delay)
 
@@ -422,6 +420,10 @@ let main argv =
 
     match algorithm with
     | 1 ->
+        // True random (not lazy so we wrap it)
+        //let finalMaze = trueRandom maze
+        //Console.Clear()
+        //printMaze finalMaze
         runLazyAlgorithm (trueRandom maze) stepMode 100
 
     | 2 ->
