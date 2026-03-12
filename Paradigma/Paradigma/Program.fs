@@ -163,60 +163,87 @@ let trueRandom maze =
 // intermediate states whenever a wall is removed.
 let primsAlgorithmLazy maze =
     seq {
-
         let startCell = maze.cells[0, 0]
-
-        // Set containing visited cells
-        let mutable visited = Set.empty
-
-        // Frontier contains walls that connect visited cells to unvisited ones
-        let mutable frontier : (Cell * Direction) list = []
-
-        visited <- Set.add (startCell.X, startCell.Y) visited
-
-        // Initialize frontier with walls of the start cell
-        frontier <-
+ 
+        // Build the initial frontier from the start cell's neighbors.
+        // Each frontier entry is a (cell, direction) pair meaning:
+        // "we could carve from 'cell' in 'direction' to reach an unvisited neighbor."
+        let initialFrontier =
             getNeighbors maze startCell
             |> List.map (fun (_, dir) -> (startCell, dir))
-
-        // Yield the initial maze state
+ 
+        // Mark the start cell as visited by adding its coordinates to the set.
+        // We use (int * int) tuples as keys rather than Cell records to avoid
+        // comparing the full Walls set on every lookup, which would be slower.
+        let initialVisited = Set.add (startCell.X, startCell.Y) Set.empty
+ 
+        // Yield the initial maze before any walls have been removed.
         yield maze
-
-        while frontier.Length > 0 do
-            let index = random.Next(frontier.Length)
-            let (cell, dir) = frontier[index]
-
-            // Remove selected wall from frontier list
-            frontier <-
-                frontier
-                |> List.mapi (fun i x -> (i, x))
-                |> List.filter (fun (i, _) -> i <> index)
-                |> List.map snd
-
-            match getNeighbors maze cell |> List.tryFind (fun (_, d) -> d = dir) with
-            | Some (neighbor, _) ->
-
-                // If neighbor was not visited yet, carve passage
-                if not (Set.contains (neighbor.X, neighbor.Y) visited) then
-
-                    removeWall maze cell dir |> ignore
-
-                    visited <- Set.add (neighbor.X, neighbor.Y) visited
-
-                    // Add new frontier walls
-                    let newWalls =
-                        getNeighbors maze neighbor
-                        |> List.filter (fun (n, _) ->
-                            not (Set.contains (n.X, n.Y) visited))
-                        |> List.map (fun (_, d) -> (neighbor, d))
-
-                    frontier <- frontier @ newWalls
-
-                    // Yield maze after each modification
-                    yield maze
-            | None -> ()
+ 
+        // The recursive step function carries two pieces of state that would
+        // otherwise need to be mutable: the current frontier and the visited set.
+        // Each recursive call receives updated copies instead of mutating in place.
+        let rec step (frontier: (Cell * Direction) list) (visited: Set<int * int>) =
+            seq {
+                // Base case: an empty frontier means every reachable cell has
+                // been visited and no more walls can be carved. The maze is complete.
+                if frontier.Length > 0 then
+ 
+                    // Pick a random wall from the frontier.
+                    // Random selection is what gives Prim's maze its characteristic
+                    // "wide, spreading" look rather than the long corridors produced
+                    // by depth-first search.
+                    let index = random.Next(frontier.Length)
+                    let (cell, dir) = frontier[index]
+ 
+                    // Remove the selected wall from the frontier list.
+                    // List.mapi pairs each element with its index so we can
+                    // identify and drop the one we just picked.
+                    let newFrontier =
+                        frontier
+                        |> List.mapi (fun i x -> (i, x))
+                        |> List.filter (fun (i, _) -> i <> index)
+                        |> List.map snd
+ 
+                    // Look up the neighbor that this frontier wall leads to.
+                    // We use List.tryFind to safely handle the case where the
+                    // direction no longer corresponds to a valid neighbor
+                    // (e.g. the cell is on the maze boundary).
+                    match getNeighbors maze cell |> List.tryFind (fun (_, d) -> d = dir) with
+ 
+                    // The neighbor exists AND has not been visited yet.
+                    // This is the only case where we actually carve a passage.
+                    | Some (neighbor, _) when not (Set.contains (neighbor.X, neighbor.Y) visited) ->
+                        removeWall maze cell dir |> ignore
+ 
+                        let newVisited = Set.add (neighbor.X, neighbor.Y) visited
+ 
+                        // Expand the frontier with the newly reachable cell's
+                        // outward walls — but only walls that lead to cells that
+                        // are still unvisited, to keep the frontier list tidy.
+                        let additions =
+                            getNeighbors maze neighbor
+                            |> List.filter (fun (n, _) -> not (Set.contains (n.X, n.Y) newVisited))
+                            |> List.map (fun (_, d) -> (neighbor, d))
+ 
+                        // Yield the maze after carving this passage so the
+                        // animation shows each step as it happens.
+                        yield maze
+ 
+                        // Recurse with the updated frontier and visited set.
+                        // The frontier grows by 'additions' and shrinks by the
+                        // one wall we just consumed.
+                        yield! step (newFrontier @ additions) newVisited
+ 
+                    // The wall either leads outside the maze or to an already-visited
+                    // cell. In both cases we simply discard it and move on without
+                    // yielding, since the maze state has not changed.
+                    | _ ->
+                        yield! step newFrontier visited
+            }
+ 
+        yield! step initialFrontier initialVisited
     }
-
 
 // -----------------------------
 // Eller's algorithm (lazy)
