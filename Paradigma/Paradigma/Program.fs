@@ -134,110 +134,93 @@ let random = Random()
 // True random algorithm
 // -----------------------------
 
-// True random maze generation by randomly removing walls between cells.
+// Removes a random wall from every cell in the maze, one cell at a time.
 let trueRandom maze =
     seq {
-        let cells =
-            seq { for x in 0 .. maze.width - 1 do
-                    for y in 0 .. maze.height - 1 ->
-                        maze.cells[x, y] }
-
-        let mutable acc = maze
-
-        for cell in cells do
-            let neighbors = getNeighbors acc cell
-            if neighbors.Length > 0 then
-                let (_, dir) = neighbors.[random.Next(neighbors.Length)]
-                acc <- removeWall acc cell dir
-
-            yield acc
+        // Flatten all cells into a single list.
+        let allCells =
+            [ for x in 0 .. maze.width - 1 do
+                for y in 0 .. maze.height - 1 ->
+                    maze.cells[x, y] ]
+ 
+        // Process one cell per call. Empty list = base case, stops recursion.
+        let rec step remaining =
+            seq {
+                match remaining with
+                | [] -> ()
+                | cell :: rest ->
+                    let neighbors = getNeighbors maze cell
+ 
+                    // Pick a random neighbor and remove the wall towards it.
+                    if neighbors.Length > 0 then
+                        let (_, dir) = neighbors.[random.Next(neighbors.Length)]
+                        removeWall maze cell dir |> ignore
+ 
+                    // Yield the updated maze state, then move to the next cell.
+                    yield maze
+                    yield! step rest
+            }
+ 
+        yield! step allCells
     }
-
+ 
 
 // -----------------------------
 // Prim's algorithm (lazy version)
 // -----------------------------
 
-// Lazy version of Prim's algorithm.
-// Instead of returning the final maze immediately, this function yields
-// intermediate states whenever a wall is removed.
+// Grows the maze outward from (0,0) by randomly carving walls to unvisited neighbors.
 let primsAlgorithmLazy maze =
     seq {
         let startCell = maze.cells[0, 0]
  
-        // Build the initial frontier from the start cell's neighbors.
-        // Each frontier entry is a (cell, direction) pair meaning:
-        // "we could carve from 'cell' in 'direction' to reach an unvisited neighbor."
+        // Frontier: walls leading from visited cells to unvisited ones.
         let initialFrontier =
             getNeighbors maze startCell
             |> List.map (fun (_, dir) -> (startCell, dir))
  
-        // Mark the start cell as visited by adding its coordinates to the set.
-        // We use (int * int) tuples as keys rather than Cell records to avoid
-        // comparing the full Walls set on every lookup, which would be slower.
+        // Track visited cells by coordinate.
         let initialVisited = Set.add (startCell.X, startCell.Y) Set.empty
  
-        // Yield the initial maze before any walls have been removed.
         yield maze
  
-        // The recursive step function carries two pieces of state that would
-        // otherwise need to be mutable: the current frontier and the visited set.
-        // Each recursive call receives updated copies instead of mutating in place.
+        // frontier cells and visited cells are passed as parameters instead of mutable variables.
         let rec step (frontier: (Cell * Direction) list) (visited: Set<int * int>) =
             seq {
-                // Base case: an empty frontier means every reachable cell has
-                // been visited and no more walls can be carved. The maze is complete.
+                // Empty frontier means the maze is complete.
                 if frontier.Length > 0 then
  
                     // Pick a random wall from the frontier.
-                    // Random selection is what gives Prim's maze its characteristic
-                    // "wide, spreading" look rather than the long corridors produced
-                    // by depth-first search.
                     let index = random.Next(frontier.Length)
                     let (cell, dir) = frontier[index]
  
-                    // Remove the selected wall from the frontier list.
-                    // List.mapi pairs each element with its index so we can
-                    // identify and drop the one we just picked.
+                    // Remove the chosen wall from the frontier list.
+                    // List.mapi attaches each element's index so we can filter out the picked one.
                     let newFrontier =
                         frontier
                         |> List.mapi (fun i x -> (i, x))
                         |> List.filter (fun (i, _) -> i <> index)
                         |> List.map snd
  
-                    // Look up the neighbor that this frontier wall leads to.
-                    // We use List.tryFind to safely handle the case where the
-                    // direction no longer corresponds to a valid neighbor
-                    // (e.g. the cell is on the maze boundary).
+                    // Find the neighbor this wall leads to.
                     match getNeighbors maze cell |> List.tryFind (fun (_, d) -> d = dir) with
  
-                    // The neighbor exists AND has not been visited yet.
-                    // This is the only case where we actually carve a passage.
+                    // Neighbor is unvisited: carve the wall and expand the frontier.
                     | Some (neighbor, _) when not (Set.contains (neighbor.X, neighbor.Y) visited) ->
                         removeWall maze cell dir |> ignore
  
                         let newVisited = Set.add (neighbor.X, neighbor.Y) visited
  
-                        // Expand the frontier with the newly reachable cell's
-                        // outward walls — but only walls that lead to cells that
-                        // are still unvisited, to keep the frontier list tidy.
+                        // Add the new cell's outward walls to the frontier.
                         let additions =
                             getNeighbors maze neighbor
                             |> List.filter (fun (n, _) -> not (Set.contains (n.X, n.Y) newVisited))
                             |> List.map (fun (_, d) -> (neighbor, d))
  
-                        // Yield the maze after carving this passage so the
-                        // animation shows each step as it happens.
                         yield maze
- 
-                        // Recurse with the updated frontier and visited set.
-                        // The frontier grows by 'additions' and shrinks by the
-                        // one wall we just consumed.
                         yield! step (newFrontier @ additions) newVisited
  
-                    // The wall either leads outside the maze or to an already-visited
-                    // cell. In both cases we simply discard it and move on without
-                    // yielding, since the maze state has not changed.
+                    // Neighbor is already visited or out of bounds: discard and continue.
                     | _ ->
                         yield! step newFrontier visited
             }
@@ -245,11 +228,11 @@ let primsAlgorithmLazy maze =
         yield! step initialFrontier initialVisited
     }
 
+
 // -----------------------------
 // Eller's algorithm (lazy)
 // -----------------------------
-
-// Lazy implementation of Eller's algorithm.
+ 
 // The maze is generated row by row.
 let ellersAlgorithmLazy maze =
     seq {
